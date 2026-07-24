@@ -2249,7 +2249,9 @@ body.show-landing #landingScreen { display: flex; }
 body.show-landing .nav-tabs-ribbon,
 body.show-landing #glanceStrip,
 body.show-landing .main-workspace,
-body.show-landing .app-footer { display: none !important; }
+body.show-landing .app-footer,
+body.show-landing .nav-right { display: none !important; }
+body.show-landing #brandHome { cursor: default; }
 
 .landing-screen {
     min-height: calc(100vh - 66px);
