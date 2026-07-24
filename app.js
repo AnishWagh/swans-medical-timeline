@@ -319,6 +319,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3800);
     }
 
+    // Landing screen (first-run entry point) show/hide
+    function showLanding() { document.body.classList.add('show-landing'); }
+    function enterApp() { document.body.classList.remove('show-landing'); }
+
     // Distinct providers / medicine types / body-region zones present in a case
     function distinctProviders(encounters) {
         return [...new Set(encounters.map(e => (e.provider || '').trim()).filter(Boolean))].sort();
@@ -511,6 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.verdictParams.medicalBills = null;
         initStarredExhibits();
         document.getElementById('savedModal').classList.add('hidden');
+        enterApp();
         switchTab('tab-timeline');
         renderApp();
         showToast(`Opened "${entry.name}".`, 'success');
@@ -2294,6 +2299,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- v2 control wiring ----
 
+    // Landing screen actions
+    const landingUploadBtn = document.getElementById('landingUploadBtn');
+    if (landingUploadBtn) landingUploadBtn.addEventListener('click', () => elements.uploadModal.classList.remove('hidden'));
+    const landingOpenRecordsBtn = document.getElementById('landingOpenRecordsBtn');
+    if (landingOpenRecordsBtn) landingOpenRecordsBtn.addEventListener('click', () => { renderSavedList(); document.getElementById('savedModal').classList.remove('hidden'); });
+    const landingSampleBtn = document.getElementById('landingSampleBtn');
+    if (landingSampleBtn) landingSampleBtn.addEventListener('click', () => { enterApp(); switchTab('tab-timeline'); });
+    const brandHome = document.getElementById('brandHome');
+    if (brandHome) {
+        brandHome.addEventListener('click', showLanding);
+        brandHome.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showLanding(); } });
+    }
+
     // Group-by segmented control
     const groupByControl = document.getElementById('groupByControl');
     if (groupByControl) {
@@ -2561,7 +2579,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.uploadStatusBox.classList.add('hidden');
                 elements.uploadModal.classList.add('hidden');
 
-                // Land on the timeline (the story), then prompt for the crash date, which is not in the file.
+                // Leave the landing screen and land on the timeline (the story), then prompt for the crash date.
+                enterApp();
                 switchTab('tab-timeline');
                 renderApp();
 
@@ -2583,5 +2602,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Initial Launch ---
+    // Render the app behind the landing screen, then present the landing entry point first.
     renderApp();
+    showLanding();
 });

@@ -2239,3 +2239,47 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible,
 .stepped-timeline-wrapper, .stepped-blocks-row { min-width: 0; }
 .stepped-main-axis-card { max-width: 100%; }
 .duration-chevrons-row { min-width: 0; }
+
+/* ==========================================================================
+   LANDING SCREEN  -  first-run entry point (Update the Sheet / Open Records)
+   ========================================================================== */
+#brandHome { cursor: pointer; }
+#landingScreen { display: none; }
+body.show-landing #landingScreen { display: flex; }
+body.show-landing .nav-tabs-ribbon,
+body.show-landing #glanceStrip,
+body.show-landing .main-workspace,
+body.show-landing .app-footer { display: none !important; }
+
+.landing-screen {
+    min-height: calc(100vh - 66px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-7) var(--sp-5);
+}
+.landing-inner { max-width: 1000px; width: 100%; text-align: center; }
+.landing-hero h1 { font-size: var(--fs-3xl); line-height: 1.12; margin-bottom: var(--sp-4); letter-spacing: -0.02em; }
+.landing-hero p { color: var(--text-muted); max-width: 62ch; margin: 0 auto var(--sp-6); font-size: var(--fs-md); }
+.landing-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
+.landing-card {
+    display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2);
+    text-align: left; padding: var(--sp-5);
+    background: var(--s-2); border: 1px solid var(--line); border-radius: var(--radius-lg);
+    cursor: pointer; color: inherit; font: inherit;
+    transition: border-color .15s ease, transform .1s ease, box-shadow .15s ease;
+}
+.landing-card:hover { border-color: var(--brand); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.32); }
+.landing-icon {
+    width: 48px; height: 48px; border-radius: 12px; margin-bottom: var(--sp-2);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--brand-soft); color: var(--brand-2); font-size: 1.3rem;
+}
+.landing-card-title { font-family: var(--font-heading); font-weight: 700; font-size: var(--fs-lg); color: var(--text-primary); }
+.landing-card-sub { color: var(--text-dim); font-size: var(--fs-sm); }
+.landing-foot { margin-top: var(--sp-6); color: var(--text-dim); font-size: var(--fs-xs); }
+
+@media (max-width: 768px) {
+    .landing-actions { grid-template-columns: 1fr; }
+    .landing-hero h1 { font-size: var(--fs-2xl); }
+}

@@ -25,7 +25,7 @@
     <div id="app" class="app-wrapper">
         <!-- Top Navbar -->
         <header class="navbar-glass">
-            <div class="nav-left">
+            <div class="nav-left" id="brandHome" role="button" tabindex="0" title="Back to start">
                 <div class="logo-badge">
                     <i class="fa-solid fa-scale-balanced"></i>
                 </div>
@@ -54,7 +54,7 @@
                 <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" style="display:none;">
 
                 <button id="openQuestionnaireBtn" class="glass-btn btn-secondary">
-                    <i class="fa-solid fa-sliders"></i> Case Setup
+                    <i class="fa-solid fa-car-burst"></i> Crash Date
                 </button>
 
                 <button id="saveTimelineBtn" class="glass-btn btn-secondary">
@@ -70,6 +70,34 @@
                 </button>
             </div>
         </header>
+
+        <!-- LANDING SCREEN -->
+        <section id="landingScreen" class="landing-screen">
+            <div class="landing-inner">
+                <div class="landing-hero">
+                    <h1>Turn a medical spreadsheet into a treatment story</h1>
+                    <p>Load a case file of medical encounters and get a clear, visual timeline you can filter, group, annotate, and present. Everything runs in your browser - nothing is uploaded to a server.</p>
+                </div>
+                <div class="landing-actions">
+                    <button class="landing-card" id="landingUploadBtn">
+                        <span class="landing-icon"><i class="fa-solid fa-file-arrow-up"></i></span>
+                        <span class="landing-card-title">Update the Sheet</span>
+                        <span class="landing-card-sub">Upload an Excel or CSV case file (.xlsx, .xls, .csv)</span>
+                    </button>
+                    <button class="landing-card" id="landingOpenRecordsBtn">
+                        <span class="landing-icon"><i class="fa-solid fa-folder-open"></i></span>
+                        <span class="landing-card-title">Open Records</span>
+                        <span class="landing-card-sub">Reopen a timeline you saved earlier in this browser</span>
+                    </button>
+                    <button class="landing-card" id="landingSampleBtn">
+                        <span class="landing-icon"><i class="fa-solid fa-flask-vial"></i></span>
+                        <span class="landing-card-title">Explore a Sample</span>
+                        <span class="landing-card-sub">Open a demo case to see how it works</span>
+                    </button>
+                </div>
+                <p class="landing-foot">Uploaded files and edits stay on this device and are lost on refresh unless you Save. AI features are optional and off by default.</p>
+            </div>
+        </section>
 
         <!-- 6 Main Navigation Glass Tabs -->
         <nav class="nav-tabs-ribbon">
@@ -875,34 +903,17 @@
     <div id="questionnaireModal" class="modal-overlay hidden">
         <div class="glass-modal">
             <button class="modal-close" id="qModalCloseBtn">&times;</button>
-            <h3><i class="fa-solid fa-sliders text-cyan"></i> Case Setup & Parameters</h3>
-            <p class="modal-sub">The crash date is <strong>not in the medical records</strong>. Add it here so the pre/post-crash split, the timeline crash marker, and gap analysis are accurate.</p>
+            <h3><i class="fa-solid fa-car-burst text-amber"></i> Set the Crash Date</h3>
+            <p class="modal-sub">The crash date is <strong>not in the medical records</strong>. Add it here so the pre/post-crash split, the timeline crash marker, and gap analysis are accurate. It is the one milestone only you can supply.</p>
 
             <form id="questionnaireForm" class="modal-form">
                 <div class="form-group">
-                    <label for="qAccidentDate"><i class="fa-solid fa-car-burst text-amber"></i> Accident / Collision Date <span style="color:var(--sev-high);">(required for pre/post analysis)</span>:</label>
+                    <label for="qAccidentDate">Accident / Collision Date <span style="color:var(--sev-high);">(required for pre/post analysis)</span>:</label>
                     <input type="date" id="qAccidentDate" class="glass-input">
                     <small id="qAccidentHint" class="text-dim" style="font-size:var(--fs-xs);">This case is not analyzed as pre/post-crash until you set this date.</small>
                 </div>
-                <div class="form-group">
-                    <label for="qInjuryCategory">Primary Injury Focus:</label>
-                    <select id="qInjuryCategory" class="glass-select">
-                        <option value="spine">Spine (Cervical / Lumbar Herniations & Surgery)</option>
-                        <option value="tbi">Traumatic Brain Injury (TBI & Concussion)</option>
-                        <option value="fracture">Joint & Bone Fractures</option>
-                        <option value="soft">Soft Tissue & Rehab</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="qClaimGoal">Primary Claim Objective:</label>
-                    <select id="qClaimGoal" class="glass-select">
-                        <option value="settlement">Insurance Settlement Demand Package</option>
-                        <option value="mediation">Mediation Brief & Presentation</option>
-                        <option value="trial">Jury Trial Visual Deck</option>
-                    </select>
-                </div>
                 <div class="modal-form-actions mt-3">
-                    <button type="submit" class="glass-btn btn-primary w-full">Apply Case Setup</button>
+                    <button type="submit" class="glass-btn btn-primary w-full">Set Crash Date</button>
                 </div>
             </form>
         </div>
