@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swans Medical Timeline - Personal Injury Treatment Chronology</title>
+    <meta name="description" content="Turn a medical-events spreadsheet into a clear, visual treatment timeline for personal-injury cases: milestones, pre/post-crash view, grouping, filtering, AI summaries, and courtroom exports.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js, SheetJS & PptxGenJS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-glass-theme">
+    <div id="app" class="app-wrapper">
+        <!-- Top Navbar -->
+        <header class="navbar-glass">
+            <div class="nav-left">
+                <div class="logo-badge">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>SWANS <span class="brand-sub">MEDICAL TIMELINE</span></h1>
+                    <span class="brand-tag">Personal Injury Treatment Chronology</span>
+                </div>
+            </div>
+
+            <!-- Global Action Bar -->
+            <div class="nav-right">
+                <div class="case-select-wrapper">
+                    <i class="fa-solid fa-folder-open select-icon"></i>
+                    <select id="sampleSelect" class="apple-select">
+                        <option value="caldwell">Caldwell (137 Encounters)</option>
+                        <option value="garrison">Garrison (820 Encounters)</option>
+                        <option value="mercer">Mercer (245 Encounters)</option>
+                        <option value="rogers">Rogers (100 Encounters)</option>
+                        <option value="middleswarth">Middleswarth (49 Encounters)</option>
+                    </select>
+                </div>
+
+                <button id="uploadExcelTriggerBtn" class="glass-btn btn-secondary">
+                    <i class="fa-solid fa-file-excel"></i> Upload Excel
+                </button>
+                <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" style="display:none;">
+
+                <button id="openQuestionnaireBtn" class="glass-btn btn-secondary">
+                    <i class="fa-solid fa-sliders"></i> Case Setup
+                </button>
+
+                <button id="saveTimelineBtn" class="glass-btn btn-secondary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save
+                </button>
+
+                <button id="openSavedBtn" class="glass-btn btn-secondary">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Saved
+                </button>
+
+                <button id="quickExportBtn" class="glass-btn btn-primary">
+                    <i class="fa-solid fa-file-pdf"></i> Export Court Deck
+                </button>
+            </div>
+        </header>
+
+        <!-- 6 Main Navigation Glass Tabs -->
+        <nav class="nav-tabs-ribbon">
+            <button class="nav-tab active" data-tab="tab-timeline">
+                <i class="fa-solid fa-timeline"></i>
+                <span>Interactive Timeline</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-verdict">
+                <i class="fa-solid fa-calculator"></i>
+                <span>Executive Verdict & Settlement</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-causation">
+                <i class="fa-solid fa-code-compare"></i>
+                <span>Pre vs Post Crash Causation</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-heatmap">
+                <i class="fa-solid fa-child-reaching"></i>
+                <span>Anatomical Trauma Heatmap</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-ai">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>AI Claims Assistant</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-export">
+                <i class="fa-solid fa-file-powerpoint"></i>
+                <span>Courtroom Export Deck</span>
+            </button>
+        </nav>
+
+        <!-- Case At-a-Glance Strip -->
+        <div id="glanceStrip" class="glance-strip">
+            <!-- Populated dynamically -->
+        </div>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+
+            <!-- TAB 1: EXECUTIVE VERDICT & SETTLEMENT CALCULATOR -->
+            <section id="tab-verdict" class="tab-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2><i class="fa-solid fa-gavel"></i> Executive Verdict & Settlement Calculator</h2>
+                        <p class="panel-sub">Financial exposure modeling, special damages tally, multiplier analysis, and dynamic demand letter generator.</p>
+                    </div>
+                    <div class="case-meta-badge" id="vCaseMetaBadge">
+                        Loading Case...
+                    </div>
+                </div>
+
+                <div class="verdict-grid">
+                    <!-- Column 1: Financial Calculator & KPIs -->
+                    <div class="glass-card verdict-calc-card">
+                        <h3><i class="fa-solid fa-calculator"></i> Settlement Valuation Model</h3>
+                        
+                        <div class="kpi-mini-grid">
+                            <div class="kpi-box">
+                                <span class="kpi-lbl">Past Medical Bills</span>
+                                <span class="kpi-val text-emerald" id="vMedicalBills">$0</span>
+                            </div>
+                            <div class="kpi-box">
+                                <span class="kpi-lbl">Total Encounters</span>
+                                <span class="kpi-val text-cyan" id="vTotalEncounters">0</span>
+                            </div>
+                            <div class="kpi-box">
+                                <span class="kpi-lbl">Critical Milestones</span>
+                                <span class="kpi-val text-rose" id="vCriticalEncounters">0</span>
+                            </div>
+                        </div>
+
+                        <div class="calc-controls-box">
+                            <div class="form-row">
+                                <label for="vMedicalBillsInput">Past Medical Bills ($):</label>
+                                <input type="number" id="vMedicalBillsInput" class="glass-input" value="0" step="1000">
+                            </div>
+                            <div class="form-row">
+                                <label for="vFutureCareInput">Estimated Future Medical Care ($):</label>
+                                <input type="number" id="vFutureCareInput" class="glass-input" value="35000" step="5000">
+                            </div>
+                            <div class="form-row">
+                                <label for="vLostWagesInput">Proven Lost Wages / Earnings ($):</label>
+                                <input type="number" id="vLostWagesInput" class="glass-input" value="14500" step="1000">
+                            </div>
+                            <div class="form-row">
+                                <label for="vMultiplierSlider">Pain & Suffering Multiplier: <strong id="vMultiplierVal" class="text-amber">3.0x</strong></label>
+                                <input type="range" id="vMultiplierSlider" min="1.5" max="5.0" step="0.1" value="3.0" class="glass-slider">
+                                <div class="slider-ticks">
+                                    <span>1.5x (Minor)</span>
+                                    <span>3.0x (Moderate)</span>
+                                    <span>5.0x (Severe/Surgery)</span>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="vFaultSlider">Plaintiff Comparative Fault: <strong id="vFaultVal" class="text-rose">0%</strong></label>
+                                <input type="range" id="vFaultSlider" min="0" max="50" step="1" value="0" class="glass-slider">
+                                <div class="slider-ticks">
+                                    <span>0% (No Fault)</span>
+                                    <span>25% (Partial)</span>
+                                    <span>50% (Barred)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settlement-summary-box">
+                            <h4>Estimated Case Valuation Range</h4>
+                            <div class="valuation-bars">
+                                <div class="val-card low">
+                                    <span class="val-tag">Conservative (1.8x)</span>
+                                    <span class="val-amount" id="vSettlementLow">$0</span>
+                                </div>
+                                <div class="val-card target featured">
+                                    <span class="val-tag">Target Settlement (Selected)</span>
+                                    <span class="val-amount text-emerald" id="vSettlementMid">$0</span>
+                                </div>
+                                <div class="val-card high">
+                                    <span class="val-tag">Jury Trial Demand (5.0x)</span>
+                                    <span class="val-amount" id="vSettlementHigh">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Case Strength Score & Billing Chart -->
+                    <div class="glass-card verdict-analytics-card">
+                        <h3><i class="fa-solid fa-shield-halved"></i> Case Strength & Evidence Score</h3>
+                        <div class="strength-score-wrapper">
+                            <div class="score-ring">
+                                <span class="score-num" id="vStrengthScore">0%</span>
+                                <span class="score-lbl">Case Strength</span>
+                            </div>
+                            <div class="strength-factors" id="vStrengthFactors">
+                                <!-- Dynamic check items -->
+                            </div>
+                        </div>
+
+                        <hr class="glass-divider">
+
+                        <h3><i class="fa-solid fa-chart-pie"></i> Medical Billing Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="chartBillingCategories"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Demand Package Generator -->
+                <div class="glass-card demand-generator-card">
+                    <div class="demand-header">
+                        <h3><i class="fa-solid fa-file-contract"></i> Executive Settlement Demand Letter Highlights</h3>
+                        <button id="copyDemandBtn" class="glass-btn btn-secondary">
+                            <i class="fa-solid fa-copy"></i> Copy Demand Text
+                        </button>
+                    </div>
+                    <div class="demand-content" id="demandLetterBox" contenteditable="true">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 2: INTERACTIVE TIMELINE -->
+            <section id="tab-timeline" class="tab-panel active">
+                <div class="timeline-layout">
+                    <!-- Left Sidebar Controls -->
+                    <aside class="control-sidebar">
+                        <button id="clearAllFiltersBtn" class="glass-btn btn-secondary" style="width:100%;justify-content:center;">
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Clear All Filters
+                        </button>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-magnifying-glass"></i> Search Chronology</label>
+                            <input type="text" id="searchBox" class="glass-input" placeholder="Search provider, body part, notes...">
+                        </div>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-calendar-day"></i> Crash Date & Sequence</label>
+                            <input type="date" id="crashDateInput" class="glass-input">
+                            <div class="filter-pills">
+                                <button class="pill-btn active" data-view="all">All</button>
+                                <button class="pill-btn" data-view="pre">Pre-Crash</button>
+                                <button class="pill-btn" data-view="post">Post-Crash</button>
+                            </div>
+                        </div>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-filter"></i> Category Filter</label>
+                            <select id="milestoneFilter" class="glass-select">
+                                <option value="all">All Encounters</option>
+                                <option value="critical">Critical Encounters (MRIs, Surgeries, Fractures)</option>
+                                <option value="er">ER / Emergency Visits</option>
+                                <option value="mri">MRIs & Diagnostic Imaging</option>
+                                <option value="surgery">Surgeries & Procedures</option>
+                                <option value="pt">Physical Therapy & Rehab</option>
+                                <option value="exhibits">Starred Trial Exhibits</option>
+                            </select>
+                        </div>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-user-doctor"></i> Provider</label>
+                            <div id="providerFacets" class="facet-chips"></div>
+                        </div>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-stethoscope"></i> Medicine Type</label>
+                            <div id="medTypeFacets" class="facet-chips"></div>
+                        </div>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-calendar-range"></i> Date Range</label>
+                            <div class="facet-group">
+                                <input type="date" id="dateFromInput" class="glass-input" style="margin-bottom:0.4rem;">
+                                <input type="date" id="dateToInput" class="glass-input">
+                                <button id="clearDateRangeBtn" class="pill-btn" style="margin-top:0.4rem;align-self:flex-start;">Clear Range</button>
+                            </div>
+                        </div>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-triangle-exclamation"></i> Gap Detection</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="gapToggle" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Highlight Care Gaps (>21 Days)</span>
+                            </label>
+                        </div>
+
+                        <div class="glass-card control-group">
+                            <label class="control-label"><i class="fa-solid fa-grip"></i> Timeline View</label>
+                            <div class="filter-pills">
+                                <button class="pill-btn active" id="layoutStreamBtn"><i class="fa-solid fa-bars-staggered"></i> Stream</button>
+                                <button class="pill-btn" id="layoutSteppedBtn"><i class="fa-solid fa-timeline"></i> Stepped Phase</button>
+                                <button class="pill-btn" id="layoutGridBtn"><i class="fa-solid fa-border-all"></i> Cards</button>
+                            </div>
+                        </div>
+
+                        <div class="glass-card metrics-card">
+                            <div class="metric-item">
+                                <span class="metric-val" id="metricTotal">0</span>
+                                <span class="metric-lbl">Total Events</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-val text-emerald" id="metricShown">0</span>
+                                <span class="metric-lbl">Shown</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-val text-amber" id="metricStarred">0</span>
+                                <span class="metric-lbl">Starred Exhibits</span>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Main Timeline Stream Canvas -->
+                    <div class="timeline-main">
+                        <div class="canvas-header-bar">
+                            <div>
+                                <h3 id="tCaseTitle">Case Timeline</h3>
+                                <p id="tCaseSub" class="canvas-sub">Date Span: Loading...</p>
+                            </div>
+                            <div class="canvas-header-right" style="display:flex;align-items:center;gap:0.75rem;">
+                                <div class="seg-control" id="groupByControl" title="Group events">
+                                    <button data-group="none" class="active">No Grouping</button>
+                                    <button data-group="provider">Provider</button>
+                                    <button data-group="medicineType">Type</button>
+                                    <button data-group="bodyPart">Body Part</button>
+                                </div>
+                                <div id="tGapSummaryBadge" class="gap-summary-badge">
+                                    Gaps: Scanning...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Key Milestones Rail -->
+                        <div id="milestonesRail" class="milestones-rail">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Gap Alert Banner -->
+                        <div id="gapAlertBanner" class="gap-banner-card hidden">
+                            <i class="fa-solid fa-triangle-exclamation gap-icon"></i>
+                            <div class="gap-banner-info">
+                                <h4 id="gapBannerTitle">Treatment Gap Warning Detected</h4>
+                                <p id="gapBannerText">Review flagged intervals for potential defense challenges and plaintiff rebuttals.</p>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Nodes Container -->
+                        <div id="timelineContainer" class="timeline-stream-view">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 3: PRE VS POST CRASH CAUSATION INSPECTOR -->
+            <section id="tab-causation" class="tab-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2><i class="fa-solid fa-code-compare"></i> Pre vs Post Crash Causation Inspector</h2>
+                        <p class="panel-sub">Differentiate pre-existing asymptomatic degeneration from acute traumatic crash injuries to defeat defense causation arguments.</p>
+                    </div>
+                </div>
+
+                <div class="causation-kpi-row">
+                    <div class="glass-card kpi-card">
+                        <span class="kpi-title">Pre-Crash Baseline Visits</span>
+                        <span class="kpi-number text-muted" id="cPreCount">0</span>
+                        <span class="kpi-sub">Prior Medical History</span>
+                    </div>
+                    <div class="glass-card kpi-card">
+                        <span class="kpi-title">Acute Post-Crash Encounters</span>
+                        <span class="kpi-number text-rose" id="cPostCount">0</span>
+                        <span class="kpi-sub">Post-Accident Care</span>
+                    </div>
+                    <div class="glass-card kpi-card">
+                        <span class="kpi-title">Baseline Pain vs Acute Pain</span>
+                        <span class="kpi-number text-amber" id="cPainShift">0 / 10 -> 0 / 10</span>
+                        <span class="kpi-sub">Pain Exacerbation</span>
+                    </div>
+                    <div class="glass-card kpi-card">
+                        <span class="kpi-title">Baseline Medical Cost Shift</span>
+                        <span class="kpi-number text-emerald" id="cCostShift">$0 -> $0</span>
+                        <span class="kpi-sub">Traumatic Cost Escalation</span>
+                    </div>
+                </div>
+
+                <!-- Eggshell Doctrine Explanation Card -->
+                <div class="glass-card eggshell-banner">
+                    <div class="eggshell-header">
+                        <i class="fa-solid fa-gavel text-amber"></i>
+                        <h3>The Eggshell Plaintiff Doctrine (Jury Instruction Standard)</h3>
+                    </div>
+                    <p>Under established tort law, a defendant takes an injured plaintiff as found. Even if pre-existing degenerative changes existed in the spine or joints prior to the crash, the tortfeasor is 100% legally responsible for all acute traumatic aggravation, symptom onset, disability, and resulting medical treatment caused by the collision.</p>
+                </div>
+
+                <!-- Dual Column Comparison Flow -->
+                <div class="causation-split-container">
+                    <!-- Left Column: Pre-Crash Baseline -->
+                    <div class="glass-card causation-col pre-col">
+                        <div class="col-header">
+                            <i class="fa-solid fa-history text-muted"></i>
+                            <h3>Pre-Crash Baseline (Prior History)</h3>
+                            <span class="col-count-tag" id="cPreTag">0 Records</span>
+                        </div>
+                        <div id="causationPreList" class="causation-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Center Divider Arrow -->
+                    <div class="causation-divider">
+                        <div class="crash-divider-pill">
+                            <i class="fa-solid fa-car-burst"></i>
+                            <span>MOTOR VEHICLE COLLISION</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Post-Crash Traumatic Sequelae -->
+                    <div class="glass-card causation-col post-col">
+                        <div class="col-header">
+                            <i class="fa-solid fa-bolt text-rose"></i>
+                            <h3>Post-Crash Acute Trauma & Care</h3>
+                            <span class="col-count-tag" id="cPostTag">0 Records</span>
+                        </div>
+                        <div id="causationPostList" class="causation-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Defense vs Plaintiff Strategy Matrix Table -->
+                <div class="glass-card matrix-card">
+                    <h3><i class="fa-solid fa-shield-cat"></i> Causation Defense Rebuttal Matrix</h3>
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Defense Assertion (IME Doctor)</th>
+                                <th>Objective Medical Evidence</th>
+                                <th>Trial Strategy & Rebuttal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="causationMatrixBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <!-- TAB 4: ANATOMICAL TRAUMA HEATMAP -->
+            <section id="tab-heatmap" class="tab-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2><i class="fa-solid fa-child-reaching"></i> Anatomical Trauma Heatmap</h2>
+                        <p class="panel-sub">Interactive 2D anatomical body visualizer highlighting injury severity heat zones. Click any region to filter encounters.</p>
+                    </div>
+                </div>
+
+                <div class="heatmap-layout">
+                    <!-- Left Body Map SVG Visualizer -->
+                    <div class="glass-card body-map-card">
+                        <div class="body-map-header">
+                            <h3><i class="fa-solid fa-street-view"></i> Traumatic Heat Map</h3>
+                            <span class="hint-pill"><i class="fa-solid fa-hand-pointer"></i> Click region to filter timeline</span>
+                        </div>
+
+                        <div class="body-map-svg-container">
+                            <svg id="humanBodySvg" viewBox="0 0 300 600" class="human-body-svg">
+                                <!-- Body Silhouette Background -->
+                                <g class="body-silhouette">
+                                    <!-- Head -->
+                                    <circle cx="150" cy="50" r="32" class="body-path-bg"/>
+                                    <!-- Neck -->
+                                    <rect x="140" y="80" width="20" height="25" rx="4" class="body-path-bg"/>
+                                    <!-- Torso & Chest -->
+                                    <path d="M 110 105 L 190 105 L 180 250 L 120 250 Z" class="body-path-bg"/>
+                                    <!-- Spine Line -->
+                                    <line x1="150" y1="80" x2="150" y2="250" stroke="rgba(255,255,255,0.15)" stroke-width="3" stroke-dasharray="4"/>
+                                    <!-- Left Shoulder / Arm -->
+                                    <path d="M 110 105 L 75 120 L 60 210 L 80 215 L 95 140 L 110 150 Z" class="body-path-bg"/>
+                                    <!-- Right Shoulder / Arm -->
+                                    <path d="M 190 105 L 225 120 L 240 210 L 220 215 L 205 140 L 190 150 Z" class="body-path-bg"/>
+                                    <!-- Left Hand -->
+                                    <circle cx="55" cy="225" r="12" class="body-path-bg"/>
+                                    <!-- Right Hand -->
+                                    <circle cx="245" cy="225" r="12" class="body-path-bg"/>
+                                    <!-- Hips / Pelvis -->
+                                    <path d="M 120 250 L 180 250 L 190 300 L 110 300 Z" class="body-path-bg"/>
+                                    <!-- Left Leg & Knee -->
+                                    <path d="M 110 300 L 145 300 L 140 450 L 110 450 Z" class="body-path-bg"/>
+                                    <!-- Right Leg & Knee -->
+                                    <path d="M 155 300 L 190 300 L 190 450 L 160 450 Z" class="body-path-bg"/>
+                                    <!-- Left Foot -->
+                                    <path d="M 105 450 L 140 450 L 140 480 L 95 480 Z" class="body-path-bg"/>
+                                    <!-- Right Foot -->
+                                    <path d="M 160 450 L 195 450 L 205 480 L 160 480 Z" class="body-path-bg"/>
+                                </g>
+
+                                <!-- Interactive Body Region Hotspots -->
+                                <g class="body-hotspots">
+                                    <!-- Head / TBI -->
+                                    <circle id="zone-head" cx="150" cy="50" r="30" class="heat-zone" data-body="Head"/>
+                                    <!-- Cervical Spine / Neck -->
+                                    <rect id="zone-neck" x="135" y="82" width="30" height="22" rx="4" class="heat-zone" data-body="Neck"/>
+                                    <!-- Thoracic Spine -->
+                                    <rect id="zone-thoracic" x="135" y="115" width="30" height="55" rx="4" class="heat-zone" data-body="Thoracic Spine"/>
+                                    <!-- Lumbar Spine -->
+                                    <rect id="zone-lumbar" x="135" y="180" width="30" height="60" rx="4" class="heat-zone" data-body="Lumbar Spine"/>
+                                    <!-- Left Shoulder -->
+                                    <circle id="zone-shoulder-l" cx="100" cy="115" r="18" class="heat-zone" data-body="Shoulder"/>
+                                    <!-- Right Shoulder -->
+                                    <circle id="zone-shoulder-r" cx="200" cy="115" r="18" class="heat-zone" data-body="Shoulder"/>
+                                    <!-- Hand / Wrist Left & Right -->
+                                    <circle id="zone-hand" cx="55" cy="225" r="16" class="heat-zone" data-body="Hand"/>
+                                    <circle id="zone-hand-r" cx="245" cy="225" r="16" class="heat-zone" data-body="Hand"/>
+                                    <!-- Hip / Pelvis -->
+                                    <rect id="zone-hip" x="115" y="255" width="70" height="40" rx="6" class="heat-zone" data-body="Hip"/>
+                                    <!-- Knee Left & Right -->
+                                    <circle id="zone-knee-l" cx="125" cy="380" r="18" class="heat-zone" data-body="Knee"/>
+                                    <circle id="zone-knee-r" cx="175" cy="380" r="18" class="heat-zone" data-body="Knee"/>
+                                </g>
+                            </svg>
+                            <div id="heatmapTooltip" class="heatmap-tooltip"></div>
+                        </div>
+
+                        <div class="heat-legend">
+                            <span class="legend-title">Trauma Severity:</span>
+                            <span class="legend-item heat-critical">Surgical / Severe MRI</span>
+                            <span class="legend-item heat-moderate">Moderate / Sprain</span>
+                            <span class="legend-item heat-routine">Routine / Clear</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Body Region Data Breakdown -->
+                    <div class="glass-card region-table-card">
+                        <h3><i class="fa-solid fa-list-check"></i> Anatomical Injury Breakdown</h3>
+                        <table class="glass-table">
+                            <thead>
+                                <tr>
+                                    <th>Body Region</th>
+                                    <th>Encounters</th>
+                                    <th>Max Pain</th>
+                                    <th>Total Cost</th>
+                                    <th>Key Medical Findings</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="heatmapTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 5: AI CLAIMS ASSISTANT -->
+            <section id="tab-ai" class="tab-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI Claims Assistant</h2>
+                        <p class="panel-sub">Intelligent legal tech assistant for medical chronology Q&A, executive brief generation, and IME cross-examination drafting.</p>
+                    </div>
+                </div>
+
+                <div class="ai-layout">
+                    <!-- AI Executive Summary Banner -->
+                    <div class="glass-card ai-summary-card">
+                        <div class="ai-header-row">
+                            <h3><i class="fa-solid fa-brain text-purple"></i> AI Case Executive Summary Brief</h3>
+                            <button id="regenAiBriefBtn" class="glass-btn btn-secondary text-xs">
+                                <i class="fa-solid fa-rotate"></i> Regenerate Brief
+                            </button>
+                        </div>
+                        <div id="aiBriefBox" class="ai-brief-text">
+                            <!-- Dynamic narrative brief -->
+                        </div>
+                    </div>
+
+                    <!-- AI Chat & Q&A Box -->
+                    <div class="glass-card ai-chat-card">
+                        <h3><i class="fa-solid fa-comments"></i> Ask AI Chronology Intelligence</h3>
+
+                        <div class="ai-key-row" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+                            <i class="fa-solid fa-key text-dim"></i>
+                            <input type="password" id="geminiKeyInput" class="glass-input" placeholder="Paste Gemini API key for live AI (optional) - stays in your browser" style="flex:1;">
+                            <button id="saveGeminiKeyBtn" class="glass-btn btn-secondary text-xs">Use Key</button>
+                            <span id="aiModeBadge" class="hint-pill" title="AI mode">Offline mode</span>
+                        </div>
+
+                        <div class="preset-prompts-row">
+                            <span class="preset-lbl">Quick Prompts:</span>
+                            <button class="preset-pill" data-query="Show all MRIs">Show all MRIs</button>
+                            <button class="preset-pill" data-query="Calculate PT sessions">Calculate PT sessions</button>
+                            <button class="preset-pill" data-query="Highest pain score">Highest pain score</button>
+                            <button class="preset-pill" data-query="Are there any treatment gaps in this chronology?">Treatment Gaps?</button>
+                            <button class="preset-pill" data-query="Summarize all surgeries and invasive procedures performed.">Surgeries & Procedures</button>
+                            <button class="preset-pill" data-query="Draft 5 deposition cross-examination questions for the defense IME doctor.">IME Cross-Exam Questions</button>
+                        </div>
+
+                        <div class="ai-input-bar">
+                            <input type="text" id="aiQuestionInput" class="glass-input" placeholder="Ask AI: 'Highest pain score date?', 'Summary of ER visit', 'Pre-existing back history?'">
+                            <button id="aiAskBtn" class="glass-btn btn-primary">
+                                <i class="fa-solid fa-paper-plane"></i> Ask AI
+                            </button>
+                        </div>
+
+                        <div id="aiAnswerWindow" class="ai-answer-container hidden">
+                            <div class="ai-answer-header">
+                                <span><i class="fa-solid fa-robot"></i> Swans AI Response</span>
+                                <button id="copyAiAnswerBtn" class="glass-btn btn-secondary text-xs"><i class="fa-solid fa-copy"></i> Copy Response</button>
+                            </div>
+                            <div id="aiAnswerText" class="ai-answer-body">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Trial Arguments Generator Cards -->
+                    <div class="ai-tools-grid">
+                        <div class="glass-card tool-card">
+                            <h4><i class="fa-solid fa-gavel text-amber"></i> IME Defense Doctor Cross-Exam</h4>
+                            <p>Generate targeted deposition questions targeting defense Independent Medical Examiner (IME) vulnerabilities.</p>
+                            <button id="btnGenImeQuestions" class="glass-btn btn-secondary mt-2">Generate Questions</button>
+                        </div>
+
+                        <div class="glass-card tool-card">
+                            <h4><i class="fa-solid fa-bullhorn text-cyan"></i> Jury Opening Statement Anchors</h4>
+                            <p>Synthesize high-impact jury theme anchors translating complex medical notes into compelling narrative storytelling.</p>
+                            <button id="btnGenJuryAnchors" class="glass-btn btn-secondary mt-2">Generate Opening Points</button>
+                        </div>
+
+                        <div class="glass-card tool-card">
+                            <h4><i class="fa-solid fa-handshake text-emerald"></i> Mediation Settlement Summary</h4>
+                            <p>Build a bulleted 1-page summary for defense adjuster mediation negotiations.</p>
+                            <button id="btnGenMediationSummary" class="glass-btn btn-secondary mt-2">Generate Mediation Summary</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 6: COURTROOM EXPORT DECK -->
+            <section id="tab-export" class="tab-panel">
+                <div class="deck-controls-bar">
+                    <div>
+                        <h2><i class="fa-solid fa-file-powerpoint"></i> Courtroom Export Deck</h2>
+                        <p class="panel-sub">Printable presentation deck formatted for trial exhibits, mediation binders, and settlement conferences.</p>
+                    </div>
+
+                    <div class="deck-actions">
+                        <button id="printPdfDeckBtn" class="glass-btn btn-primary">
+                            <i class="fa-solid fa-print"></i> Print / Export PDF Deck
+                        </button>
+                        <button id="exportPptxBtn" class="glass-btn btn-secondary">
+                            <i class="fa-solid fa-file-powerpoint"></i> Export PowerPoint
+                        </button>
+                        <button id="downloadJsonBtn" class="glass-btn btn-secondary">
+                            <i class="fa-solid fa-code"></i> Download Case JSON
+                        </button>
+                        <button id="downloadCsvBtn" class="glass-btn btn-secondary">
+                            <i class="fa-solid fa-file-csv"></i> Download Exhibits CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Widescreen Printable Presentation Deck -->
+                <div id="presentationDeck" class="presentation-deck">
+
+                    <!-- SLIDE 1: Executive Case Overview & Financial Demand -->
+                    <div class="deck-slide">
+                        <div class="slide-header">
+                            <div>
+                                <span class="slide-badge">SLIDE 1: EXECUTIVE BRIEF</span>
+                                <h3 id="dSlide1Title">Personal Injury Trial Presentation</h3>
+                            </div>
+                            <div class="slide-brand">SWANS LEGALTECH</div>
+                        </div>
+
+                        <div class="slide-body">
+                            <div class="slide-grid-2">
+                                <div class="slide-card">
+                                    <h4>Case Profile & Claim Meta</h4>
+                                    <ul class="slide-meta-list" id="dSlide1Meta">
+                                        <!-- Populated dynamically -->
+                                    </ul>
+                                </div>
+
+                                <div class="slide-card featured-demand">
+                                    <h4>Financial Demand & Special Damages</h4>
+                                    <div class="demand-big-kpis">
+                                        <div class="d-kpi">
+                                            <span>Past Medical Expenses:</span>
+                                            <strong id="dSlide1Medical">$0</strong>
+                                        </div>
+                                        <div class="d-kpi">
+                                            <span>Proven Lost Earnings:</span>
+                                            <strong id="dSlide1Wages">$0</strong>
+                                        </div>
+                                        <div class="d-kpi">
+                                            <span>Estimated Future Care:</span>
+                                            <strong id="dSlide1Future">$0</strong>
+                                        </div>
+                                        <hr class="glass-divider">
+                                        <div class="d-kpi highlight">
+                                            <span>Target Settlement Value:</span>
+                                            <strong id="dSlide1Target" class="text-emerald">$0</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-footer">
+                            <span>Confidential Settlement Presentation - Subject to FRE 408</span>
+                            <span>Page 1 of 5</span>
+                        </div>
+                    </div>
+
+                    <!-- SLIDE 2: Critical Medical Milestones -->
+                    <div class="deck-slide">
+                        <div class="slide-header">
+                            <div>
+                                <span class="slide-badge">SLIDE 2: CRITICAL MEDICAL MILESTONES</span>
+                                <h3>Objective Traumatic Findings & Key Procedures</h3>
+                            </div>
+                            <div class="slide-brand">SWANS LEGALTECH</div>
+                        </div>
+
+                        <div class="slide-body">
+                            <div class="milestones-slide-grid" id="dSlide2Grid">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="slide-footer">
+                            <span>Confidential Settlement Presentation - Subject to FRE 408</span>
+                            <span>Page 2 of 5</span>
+                        </div>
+                    </div>
+
+                    <!-- SLIDE 3: Starred Trial Exhibits Index -->
+                    <div class="deck-slide">
+                        <div class="slide-header">
+                            <div>
+                                <span class="slide-badge">SLIDE 3: TRIAL EXHIBITS INDEX</span>
+                                <h3>Starred Medical Record Exhibits Catalog</h3>
+                            </div>
+                            <div class="slide-brand">SWANS LEGALTECH</div>
+                        </div>
+
+                        <div class="slide-body">
+                            <table class="slide-table">
+                                <thead>
+                                    <tr>
+                                        <th>Exhibit #</th>
+                                        <th>Date</th>
+                                        <th>Provider / Facility</th>
+                                        <th>Record Type</th>
+                                        <th>Key Diagnostic Finding / Summary</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dSlide3TableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="slide-footer">
+                            <span>Confidential Settlement Presentation - Subject to FRE 408</span>
+                            <span>Page 3 of 5</span>
+                        </div>
+                    </div>
+
+                    <!-- SLIDE 4: Treatment Continuity & Gap Rebuttal -->
+                    <div class="deck-slide">
+                        <div class="slide-header">
+                            <div>
+                                <span class="slide-badge">SLIDE 4: TREATMENT CONTINUITY</span>
+                                <h3>Care Continuity & Gap Analysis Rebuttal</h3>
+                            </div>
+                            <div class="slide-brand">SWANS LEGALTECH</div>
+                        </div>
+
+                        <div class="slide-body">
+                            <div class="slide-grid-2">
+                                <div class="slide-card">
+                                    <h4>Treatment Frequency & Compliance Summary</h4>
+                                    <p id="dSlide4Summary">Analyzing care continuity...</p>
+                                </div>
+                                <div class="slide-card">
+                                    <h4>Defense Gap Challenges & Plaintiff Rebuttal</h4>
+                                    <div id="dSlide4GapList">
+                                        <!-- Populated dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-footer">
+                            <span>Confidential Settlement Presentation - Subject to FRE 408</span>
+                            <span>Page 4 of 5</span>
+                        </div>
+                    </div>
+
+                    <!-- SLIDE 5: Pre vs Post Crash Causation Analysis -->
+                    <div class="deck-slide">
+                        <div class="slide-header">
+                            <div>
+                                <span class="slide-badge">SLIDE 5: CAUSATION ANALYSIS</span>
+                                <h3>Pre-Crash Baseline vs Acute Post-Crash Trauma</h3>
+                            </div>
+                            <div class="slide-brand">SWANS LEGALTECH</div>
+                        </div>
+
+                        <div class="slide-body">
+                            <div class="slide-grid-2">
+                                <div class="slide-card">
+                                    <h4>Pre-Crash History (Baseline)</h4>
+                                    <div id="dSlide5PreBox">
+                                        <!-- Populated dynamically -->
+                                    </div>
+                                </div>
+                                <div class="slide-card featured-post">
+                                    <h4>Post-Crash Acute Trauma & Surgery</h4>
+                                    <div id="dSlide5PostBox">
+                                        <!-- Populated dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-footer">
+                            <span>Confidential Settlement Presentation - Subject to FRE 408</span>
+                            <span>Page 5 of 5</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ENCOUNTER DETAIL MODAL -->
+    <div id="eventModal" class="modal-overlay hidden">
+        <div class="glass-modal modal-large">
+            <button class="modal-close" id="modalCloseBtn">&times;</button>
+            <div class="modal-header">
+                <span class="modal-badge" id="modalSeverityBadge">Critical</span>
+                <h3 id="modalTitle">Medical Encounter Details</h3>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <!-- Dynamic Content -->
+            </div>
+            <div class="modal-footer">
+                <button id="modalStarBtn" class="glass-btn btn-secondary">
+                    <i class="fa-solid fa-star"></i> Toggle Exhibit Star
+                </button>
+                <button class="glass-btn btn-primary" id="modalCloseActionBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CASE QUESTIONNAIRE SETUP MODAL -->
+    <div id="questionnaireModal" class="modal-overlay hidden">
+        <div class="glass-modal">
+            <button class="modal-close" id="qModalCloseBtn">&times;</button>
+            <h3><i class="fa-solid fa-sliders text-cyan"></i> Case Setup & Parameters</h3>
+            <p class="modal-sub">The crash date is <strong>not in the medical records</strong>. Add it here so the pre/post-crash split, the timeline crash marker, and gap analysis are accurate.</p>
+
+            <form id="questionnaireForm" class="modal-form">
+                <div class="form-group">
+                    <label for="qAccidentDate"><i class="fa-solid fa-car-burst text-amber"></i> Accident / Collision Date <span style="color:var(--sev-high);">(required for pre/post analysis)</span>:</label>
+                    <input type="date" id="qAccidentDate" class="glass-input">
+                    <small id="qAccidentHint" class="text-dim" style="font-size:var(--fs-xs);">This case is not analyzed as pre/post-crash until you set this date.</small>
+                </div>
+                <div class="form-group">
+                    <label for="qInjuryCategory">Primary Injury Focus:</label>
+                    <select id="qInjuryCategory" class="glass-select">
+                        <option value="spine">Spine (Cervical / Lumbar Herniations & Surgery)</option>
+                        <option value="tbi">Traumatic Brain Injury (TBI & Concussion)</option>
+                        <option value="fracture">Joint & Bone Fractures</option>
+                        <option value="soft">Soft Tissue & Rehab</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="qClaimGoal">Primary Claim Objective:</label>
+                    <select id="qClaimGoal" class="glass-select">
+                        <option value="settlement">Insurance Settlement Demand Package</option>
+                        <option value="mediation">Mediation Brief & Presentation</option>
+                        <option value="trial">Jury Trial Visual Deck</option>
+                    </select>
+                </div>
+                <div class="modal-form-actions mt-3">
+                    <button type="submit" class="glass-btn btn-primary w-full">Apply Case Setup</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EXCEL FILE UPLOAD MODAL -->
+    <div id="uploadModal" class="modal-overlay hidden">
+        <div class="glass-modal">
+            <button class="modal-close" id="uModalCloseBtn">&times;</button>
+            <h3><i class="fa-solid fa-file-excel text-emerald"></i> Upload Medical Chronology File</h3>
+            <p class="modal-sub">Supports Excel (.xlsx, .xls) and CSV chronologies. Automatic column header detection.</p>
+
+            <div class="drop-zone" id="dropZone">
+                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                <p>Drag and drop your Excel file here</p>
+                <span class="drop-sub">or click below to browse files</span>
+                <button id="browseFilesBtn" class="glass-btn btn-secondary mt-2">Browse Computer</button>
+            </div>
+
+            <div id="uploadStatusBox" class="upload-status hidden">
+                <i class="fa-solid fa-spinner fa-spin"></i> Processing file...
+            </div>
+        </div>
+    </div>
+
+    <!-- SAVED TIMELINES MODAL -->
+    <div id="savedModal" class="modal-overlay hidden">
+        <div class="glass-modal">
+            <button class="modal-close" id="savedModalCloseBtn" aria-label="Close">&times;</button>
+            <h3><i class="fa-solid fa-clock-rotate-left text-cyan"></i> Saved Timelines</h3>
+            <p class="modal-sub">Timelines you save are stored in this browser (localStorage). Nothing leaves your device.</p>
+            <div id="savedList" class="saved-list">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+    <!-- About / Assumptions Footer -->
+    <footer class="app-footer">
+        <strong>Swans Timeline</strong> - medical treatment chronology visualizer for personal-injury cases.
+        <div class="foot-grid">
+            <div><strong>Data:</strong> All processing is client-side in your browser. Uploaded files and edits are not sent to any server and are lost on refresh unless you use Save.</div>
+            <div><strong>AI:</strong> Optional. Q&A and drafting run offline by default; paste a Gemini API key to enable live AI. Assumes a Gemini API key for live mode.</div>
+            <div><strong>Cost per case:</strong> ~$0 offline. With live AI, a typical case is a few Gemini calls (well under $0.05/case at current pricing).</div>
+            <div><strong>Input:</strong> Any Excel/CSV with columns Encounter Date, Primary Provider, Facility, Body Parts, Medicine Type, Record Type, Summary, Link To Pdf. The crash date is added by you.</div>
+        </div>
+    </footer>
+
+    <!-- Application Script Files -->
+    <script src="sample_data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
